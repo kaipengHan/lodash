@@ -115,5 +115,19 @@ const lodash = {
     }
     return result;
   },
+  compact(array){
+    if(!array) return [];
+    const result = [];
+    let resIndex = 0;
+    for (const p of array) {
+      if(p){
+        result[resIndex++] = p;
+      }
+    }
+    return result;
+  },
+  concat(){
+
+  }
 }
-console.log(lodash.chunk([1,2,3,4,5], 0b10))
+console.log(lodash.compact([]))
