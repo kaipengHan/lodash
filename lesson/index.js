@@ -1,3 +1,5 @@
+import strictIndexOf from "../.internal/strictIndexOf";
+
 const lodash = {
   MAX_SAFE_INTEGER: 9007199254740991,
   INFINITY: 1 / 0,
@@ -11,6 +13,7 @@ const lodash = {
   proxyTag: '[object Proxy]',
   symbolTag: '[object Symbol]',
   NAN: 0 / 0,
+  _this: this,
   isObject(value) {
     const type = typeof value;
     return value !== null && (type === 'object' || type === 'function');
@@ -23,6 +26,9 @@ const lodash = {
   },
   isLength(value) {
     return typeof value == 'number' && value >= 0 && value % 1 === 0 && value <= this.MAX_SAFE_INTEGER;
+  },
+  isArguments(value) {
+    return this.isObjectLike(value) && this._getTag(value) === '[object Arguments]';
   },
   _getTag(value) {
     if (value == null) {
@@ -38,10 +44,16 @@ const lodash = {
   isArrayLike(value) {
     return value != null && this.isLength(value.length) && !this.isFunction(value);
   },
+  isArrayLikeObject(value) {
+    return this.isObjectLike(value) && this.isArrayLike(value);
+  },
+  // 是否可展开的arguments对象或数组
+  isFlattenable(value) {
+    return Array.isArray(value) || this.isArguments(value) || !!(value && value[Symbol.isConcatSpreadable]);
+  },
   eq(value, other) {
     return value === other || (value !== value && other !== other);
   },
-  // ?
   toNumber(value) {
     if (typeof value === 'number') {
       return value;
@@ -115,19 +127,60 @@ const lodash = {
     }
     return result;
   },
-  compact(array){
-    if(!array) return [];
+  compact(array) {
+    if (!array) return [];
     const result = [];
     let resIndex = 0;
     for (const p of array) {
-      if(p){
+      if (p) {
         result[resIndex++] = p;
       }
     }
     return result;
   },
-  concat(){
+  copyArray(source, array) {
+    let index = -1;
+    const length = source.length;
+    array || (array = Array(length));
+    while (++index < length) {
+      array[index] = source[index];
+    }
+    return array;
+  },
+  // isStrict 是否严格 如果是false 则不会使用predicate函数处理array中的每一项数据
+  // predicate 按照此函数的规则决定是否保留array的每一项
+  baseFlatten(array, depth, predicate,isStrict, result = []){
+    predicate || (predicate = this.isFlattenable);
+    if(array == null) return result;
+    for (const value of array) {
+      if(depth > 0 && predicate.call(this,value)){
+        if(depth >1){
+          this.baseFlatten(value,depth-1,predicate, isStrict,result);
+        }else{
+          result.push(...value);
+        }
+      }else if(!isStrict){
+        result[result.length] = value;
+      }
+    }
+    return result;
+  },
 
+  concat() {
+
+  },
+  // 严格模式 indexOf ===
+  strictIndexOf(array,value,fromIndex){
+
+  },
+  // [2,1] [2,3]  ==> [1]
+  difference(array,...value) {
+    console.log(value)
+    console.log(this.baseFlatten(value,1,this.isArrayLikeObject,true))
   }
 }
-console.log(lodash.compact([]))
+function getArguments(){
+  return arguments;
+}
+const array = [1, [2], getArguments('a','b'), [[4]], 5];
+console.log(lodash.difference([2,1,3],[2,[3]]));
