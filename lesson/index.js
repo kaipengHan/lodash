@@ -1,5 +1,3 @@
-import strictIndexOf from "../.internal/strictIndexOf";
-
 const lodash = {
   MAX_SAFE_INTEGER: 9007199254740991,
   INFINITY: 1 / 0,
@@ -149,38 +147,63 @@ const lodash = {
   },
   // isStrict 是否严格 如果是false 则不会使用predicate函数处理array中的每一项数据
   // predicate 按照此函数的规则决定是否保留array的每一项
-  baseFlatten(array, depth, predicate,isStrict, result = []){
+  baseFlatten(array, depth, predicate, isStrict, result = []) {
     predicate || (predicate = this.isFlattenable);
-    if(array == null) return result;
+    if (array == null) return result;
     for (const value of array) {
-      if(depth > 0 && predicate.call(this,value)){
-        if(depth >1){
-          this.baseFlatten(value,depth-1,predicate, isStrict,result);
-        }else{
+      if (depth > 0 && predicate.call(this, value)) {
+        if (depth > 1) {
+          this.baseFlatten(value, depth - 1, predicate, isStrict, result);
+        } else {
           result.push(...value);
         }
-      }else if(!isStrict){
+      } else if (!isStrict) {
         result[result.length] = value;
       }
     }
     return result;
   },
-
-  concat() {
-
-  },
   // 严格模式 indexOf ===
-  strictIndexOf(array,value,fromIndex){
+  strictIndexOf(array, value, fromIndex) {
+    let index = fromIndex - 1;
+    const {length} = array;
 
+    while (++index < length) {
+      if (array[index] === value) {
+        return index;
+      }
+    }
+    return -1;
   },
-  // [2,1] [2,3]  ==> [1]
-  difference(array,...value) {
-    console.log(value)
-    console.log(this.baseFlatten(value,1,this.isArrayLikeObject,true))
+  slice(array, start, end) {
+    let length = array == null ? 0 : array.length;
+    if (!length) return [];
+
+    start = start == null ? 0 : start;
+    end = end === undefined ? length : end;
+
+    if (start < 0) {
+      start = -start > length ? 0 : (length + start);
+    }
+    if (end < 0) {
+      end = -end > length ? length : (length + end);
+    }
+    length = start > end ? 0 : (end - start);
+    let index = -1;
+    const result = Array(length);
+    while (++index < length) {
+      result[index] = array[index + start];
+    }
+    return result;
+  },
+  drop(array, n = 1) {
+    const length = array == null ? 0 : array.length;
+    return length ? this.slice(array, n == null ? 0 : this.toInteger(n), length) : [];
   }
 }
-function getArguments(){
-  return arguments;
+
+function test(value, target) {
+  console.log(target);
 }
-const array = [1, [2], getArguments('a','b'), [[4]], 5];
-console.log(lodash.difference([2,1,3],[2,[3]]));
+
+console.log(lodash.slice([1,2,3,4,5], 1, 3));
