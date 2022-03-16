@@ -95,23 +95,23 @@ const lodash = {
     const remainder = result % 1;
     return remainder ? result - remainder : result;
   },
-  slice(array, start, end) {
-    let index = -1, length = array.length;
-    if (start < 0) {
-      start = -start > length ? 0 : (length + start);
-    }
-    end = end > length ? length : end;
-    if (end < 0) {
-      end += length;
-    }
-    length = start > end ? 0 : ((end - start) >>> 0);
-    start >>>= 0;
-    const result = Array(length);
-    while (++index < length) {
-      result[index] = array[index + start];
-    }
-    return result;
-  },
+  // slice(array, start, end) {
+  //   let index = -1, length = array.length;
+  //   if (start < 0) {
+  //     start = -start > length ? 0 : (length + start);
+  //   }
+  //   end = end > length ? length : end;
+  //   if (end < 0) {
+  //     end += length;
+  //   }
+  //   length = start > end ? 0 : ((end - start) >>> 0);
+  //   start >>>= 0;
+  //   const result = Array(length);
+  //   while (++index < length) {
+  //     result[index] = array[index + start];
+  //   }
+  //   return result;
+  // },
   chunk(array, size) {
     if (size === undefined) {
       size = 1;
@@ -196,14 +196,71 @@ const lodash = {
     }
     return result;
   },
+  baseWhile(array, predicate, isDrop, fromRight) {
+    // const { length } = array
+    // let index = fromRight ? length : -1
+    //
+    // while ((fromRight ? index-- : ++index < length) && predicate(array[index], index, array)) {}
+    //
+    // return isDrop
+    //   ? this.slice(array, (fromRight ? 0 : index), (fromRight ? index + 1 : length))
+    //   : this.slice(array, (fromRight ? index + 1 : 0), (fromRight ? length : index))
+    const { length } = array;
+    let index = fromRight ? length : -1;
+    while((fromRight ? index-- : ++index < length) && predicate(array[index],index,array)){}
+    if(isDrop){
+      return this.slice(array,fromRight ? 0 : index, fromRight ? index + 1 : length);
+    }
+
+    // const {length} = array;
+    // // 控制截取的开始或者结束的位置
+    // let index = 0;
+    // // 找第一个predicate返回假值的索引
+    // if (fromRight) {
+    //   for (let i = length-1; i > 0; i--) {
+    //     index = i;
+    //     if (!predicate(array[i], i, array)) {
+    //       break;
+    //     }
+    //   }
+    // } else {
+    //   for (let i = 0; i < length; i++) {
+    //     index = i;
+    //     if (!predicate(array[i], i, array)) {
+    //       break;
+    //     }
+    //   }
+    // }
+    // if (isDrop) {
+    //   return this.slice(array, fromRight ? 0 : index, fromRight ? index + 1 : length);
+    // }
+    // return [];
+  },
   drop(array, n = 1) {
     const length = array == null ? 0 : array.length;
     return length ? this.slice(array, n == null ? 0 : this.toInteger(n), length) : [];
-  }
+  },
+  dropRight(array, n = 1) {
+    const length = array == null ? 0 : array.length;
+    n = length - this.toInteger(n);
+    return length ? this.slice(array, 0, n < 0 ? 0 : n) : [];
+  },
+  // 从array左边开始 发现predicate第一个假值的位置一直截取到最后
+  dropWhile(array, predicate) {
+    if (array && array.length) {
+      return this.baseWhile(array, predicate, true);
+    }
+    return [];
+  },
+  // 从array右边开始 发现predicate第一个假值的位置一直截取到最开始
+  dropRightWhile(array, predicate) {
+    if (array && array.length) {
+      return this.baseWhile(array, predicate, true, true);
+    }
+    return [];
+  },
 }
 
-function test(value, target) {
-  console.log(target);
-}
-
-console.log(lodash.slice([1,2,3,4,5], 1, 3));
+console.log(lodash.dropRightWhile([1, 2, 3, 4, 5], function (e) {
+  return e < 2
+}));
