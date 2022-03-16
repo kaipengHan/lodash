@@ -2,7 +2,7 @@ const lodash = {
   MAX_SAFE_INTEGER: 9007199254740991,
   INFINITY: 1 / 0,
   MAX_INTEGER: 1.7976931348623157e+308,
-  MAX_ARRAY_LENGTH: Math.pow(2,32) - 1,
+  MAX_ARRAY_LENGTH: Math.pow(2, 32) - 1,
   toString: Object.prototype.toString(),
   nullTag: '[object Null]',
   undefinedTag: '[object Undefined]',
@@ -30,7 +30,7 @@ const lodash = {
     return this.isObjectLike(value) && this._getTag(value) === '[object Arguments]';
   },
   // 检查 `value` 是否是一个有效的类数组索引 length: 有效索引的上限
-  isIndex(value,length){
+  isIndex(value, length) {
     const type = typeof value;
     length = length == null ? this.MAX_SAFE_INTEGER : length;
     const reIsUint = /^(?:0|[1-9]\d*)$/;
@@ -60,18 +60,18 @@ const lodash = {
   eq(value, other) {
     return value === other || (value !== value && other !== other);
   },
-  baseClamp(number,lower,upper){
-    if(number === number){
-      if(lower !== undefined){
+  baseClamp(number, lower, upper) {
+    if (number === number) {
+      if (lower !== undefined) {
         number = number < lower ? lower : number;
       }
-      if(upper !== undefined){
+      if (upper !== undefined) {
         number = number > upper ? upper : number;
       }
     }
     return number;
   },
-  toLength(value){
+  toLength(value) {
     return value ? this.baseClamp(this.toInteger(value), 0, this.MAX_ARRAY_LENGTH) : 0;
   },
   toNumber(value) {
@@ -227,11 +227,12 @@ const lodash = {
     // return isDrop
     //   ? this.slice(array, (fromRight ? 0 : index), (fromRight ? index + 1 : length))
     //   : this.slice(array, (fromRight ? index + 1 : 0), (fromRight ? length : index))
-    const { length } = array;
+    const {length} = array;
     let index = fromRight ? length : -1;
-    while((fromRight ? index-- : ++index < length) && predicate(array[index],index,array)){}
-    if(isDrop){
-      return this.slice(array,fromRight ? 0 : index, fromRight ? index + 1 : length);
+    while ((fromRight ? index-- : ++index < length) && predicate(array[index], index, array)) {
+    }
+    if (isDrop) {
+      return this.slice(array, fromRight ? 0 : index, fromRight ? index + 1 : length);
     }
 
     // const {length} = array;
@@ -258,18 +259,18 @@ const lodash = {
     // }
     // return [];
   },
-  baseFill(array,value,start,end){
+  baseFill(array, value, start, end) {
     let length = array.length;
     start = this.toInteger(start);
-    if(start < 0){
+    if (start < 0) {
       start = -start < length ? (length + start) : 0;
     }
     end = (end === undefined || end > length) ? length : this.toInteger(end);
-    if(end < 0){
+    if (end < 0) {
       end += length;
     }
     end = start > end ? 0 : this.toInteger(end);
-    while (start < end){
+    while (start < end) {
       array[start++] = value;
     }
     return array;
@@ -297,14 +298,44 @@ const lodash = {
     }
     return [];
   },
-  fill(array,value,start,end){
+  fill(array, value, start, end) {
     const length = array == null ? 0 : array.length;
-    if(!length) return [];
-    if(start && typeof start !== 'number'){
+    if (!length) return [];
+    if (start && typeof start !== 'number') {
       start = 0;
       end = length;
     }
-    return this.baseFill(array,value,start,end);
-  }
+    return this.baseFill(array, value, start, end);
+  },
+  baseFindIndex(array, predicate, fromIndex, fromRight) {
+    let index = fromIndex + (fromRight ? 1 : -1);
+    while (fromRight ? index-- : ++index < array.length) {
+      if (predicate(array[index], index, array)) {
+        return index;
+      }
+    }
+    return -1;
+  },
+  findIndex(array, predicate, fromIndex) {
+    const length = array == null ? 0 : array.length;
+    if (!length) return -1;
+    let index = fromIndex == null ? 0 : this.toInteger(fromIndex);
+    if (index < 0) {
+      index = Math.max((length + index), 0);
+    }
+    return this.baseFindIndex(array, predicate, index);
+  },
+  findLastIndex(array, predicate, fromIndex) {
+    const length = array == null ? 0 : array.length;
+    if (!length) return -1;
+    let index = length - 1;
+    if (fromIndex !== undefined) {
+      index = this.toInteger(fromIndex);
+      index = fromIndex > 0 ? (Math.min(index, length - 1)) : (Math.max(0, length + index));
+    }
+    return this.baseFindIndex(array, predicate, index, true);
+  },
 }
-console.log(lodash.fill([1,2,3,4,5],'*',8,2));
+console.log(lodash.findLastIndex([1, 2, 3, 4, 5], function (e) {
+  return e === 5
+},2));
