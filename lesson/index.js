@@ -2,6 +2,7 @@ const lodash = {
   MAX_SAFE_INTEGER: 9007199254740991,
   INFINITY: 1 / 0,
   MAX_INTEGER: 1.7976931348623157e+308,
+  MAX_ARRAY_LENGTH: Math.pow(2,32) - 1,
   toString: Object.prototype.toString(),
   nullTag: '[object Null]',
   undefinedTag: '[object Undefined]',
@@ -28,6 +29,13 @@ const lodash = {
   isArguments(value) {
     return this.isObjectLike(value) && this._getTag(value) === '[object Arguments]';
   },
+  // 检查 `value` 是否是一个有效的类数组索引 length: 有效索引的上限
+  isIndex(value,length){
+    const type = typeof value;
+    length = length == null ? this.MAX_SAFE_INTEGER : length;
+    const reIsUint = /^(?:0|[1-9]\d*)$/;
+    return !!length && (type === 'number' || (type !== 'symbol' && reIsUint.test(value))) && (value > -1 && value % 1 === 0 && value < length);
+  },
   _getTag(value) {
     if (value == null) {
       return value === undefined ? this.undefinedTag : this.nullTag;
@@ -51,6 +59,20 @@ const lodash = {
   },
   eq(value, other) {
     return value === other || (value !== value && other !== other);
+  },
+  baseClamp(number,lower,upper){
+    if(number === number){
+      if(lower !== undefined){
+        number = number < lower ? lower : number;
+      }
+      if(upper !== undefined){
+        number = number > upper ? upper : number;
+      }
+    }
+    return number;
+  },
+  toLength(value){
+    return value ? this.baseClamp(this.toInteger(value), 0, this.MAX_ARRAY_LENGTH) : 0;
   },
   toNumber(value) {
     if (typeof value === 'number') {
@@ -236,6 +258,22 @@ const lodash = {
     // }
     // return [];
   },
+  baseFill(array,value,start,end){
+    let length = array.length;
+    start = this.toInteger(start);
+    if(start < 0){
+      start = -start < length ? (length + start) : 0;
+    }
+    end = (end === undefined || end > length) ? length : this.toInteger(end);
+    if(end < 0){
+      end += length;
+    }
+    end = start > end ? 0 : this.toInteger(end);
+    while (start < end){
+      array[start++] = value;
+    }
+    return array;
+  },
   drop(array, n = 1) {
     const length = array == null ? 0 : array.length;
     return length ? this.slice(array, n == null ? 0 : this.toInteger(n), length) : [];
@@ -259,8 +297,14 @@ const lodash = {
     }
     return [];
   },
+  fill(array,value,start,end){
+    const length = array == null ? 0 : array.length;
+    if(!length) return [];
+    if(start && typeof start !== 'number'){
+      start = 0;
+      end = length;
+    }
+    return this.baseFill(array,value,start,end);
+  }
 }
-
-console.log(lodash.dropRightWhile([1, 2, 3, 4, 5], function (e) {
-  return e < 2
-}));
+console.log(lodash.fill([1,2,3,4,5],'*',8,2));
