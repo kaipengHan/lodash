@@ -335,7 +335,35 @@ const lodash = {
     }
     return this.baseFindIndex(array, predicate, index, true);
   },
+  // 获取数组的第一个元素
+  head(array) {
+    return (array != null && array.length) ? array[0] : undefined;
+  },
+  // 减少数组一级嵌套深度
+  flatten(array) {
+    const length = array == null ? 0 : array.length;
+    return length ? this.baseFlatten(array,1) : [];
+  },
+  // 数组为一维数组
+  flattenDeep(array) {
+    const length = array == null ? 0 : array.length;
+    return length ? this.baseFlatten(array,this.INFINITY) : [];
+  },
+  // 根据depth减少数组的层级
+  flattenDepth(array, depth){
+    const length = array == null ? 0 : array.length;
+    if(!length) return [];
+    depth = depth === undefined ? 1 : +depth;
+    return this.baseFlatten(array, depth);
+  },
+  // [['a',1],['b',2]]  {a:1,b:2}
+  fromPairs(array){
+    let index = -1, length = array == null ? 0 : array.length, result={};
+    while (++index < length){
+      const pair = array[index];
+      result[pair[0]] = pair[1];
+    }
+    return result;
+  }
 }
-console.log(lodash.findLastIndex([1, 2, 3, 4, 5], function (e) {
-  return e === 5
-},2));
+console.log(lodash.fromPairs([['a',1],['b',2]]));
