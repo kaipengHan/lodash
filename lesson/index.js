@@ -167,6 +167,9 @@ const lodash = {
     }
     return array;
   },
+  baseIsNaN(value) {
+    return value !== value;
+  },
   // isStrict 是否严格 如果是false 则不会使用predicate函数处理array中的每一项数据
   // predicate 按照此函数的规则决定是否保留array的每一项
   baseFlatten(array, depth, predicate, isStrict, result = []) {
@@ -196,6 +199,15 @@ const lodash = {
       }
     }
     return -1;
+  },
+  strictLastIndexOf(array, value, fromIndex) {
+    let index = fromIndex + 1;
+    while (index--) {
+      if (array[index] === value) {
+        return index;
+      }
+    }
+    return index;
   },
   slice(array, start, end) {
     let length = array == null ? 0 : array.length;
@@ -342,28 +354,75 @@ const lodash = {
   // 减少数组一级嵌套深度
   flatten(array) {
     const length = array == null ? 0 : array.length;
-    return length ? this.baseFlatten(array,1) : [];
+    return length ? this.baseFlatten(array, 1) : [];
   },
   // 数组为一维数组
   flattenDeep(array) {
     const length = array == null ? 0 : array.length;
-    return length ? this.baseFlatten(array,this.INFINITY) : [];
+    return length ? this.baseFlatten(array, this.INFINITY) : [];
   },
   // 根据depth减少数组的层级
-  flattenDepth(array, depth){
+  flattenDepth(array, depth) {
     const length = array == null ? 0 : array.length;
-    if(!length) return [];
+    if (!length) return [];
     depth = depth === undefined ? 1 : +depth;
     return this.baseFlatten(array, depth);
   },
   // [['a',1],['b',2]]  {a:1,b:2}
-  fromPairs(array){
-    let index = -1, length = array == null ? 0 : array.length, result={};
-    while (++index < length){
+  fromPairs(array) {
+    let index = -1, length = array == null ? 0 : array.length, result = {};
+    while (++index < length) {
       const pair = array[index];
       result[pair[0]] = pair[1];
     }
     return result;
-  }
+  },
+  indexOf(array, value, fromIndex) {
+    const length = array == null ? 0 : array.length;
+    if (!length) return -1;
+    let index = fromIndex == null ? 0 : this.toInteger(fromIndex);
+    if (index < 0) {
+      index = Math.max(length + index, 0);
+    }
+    if (value === value) {
+      return this.strictIndexOf(array, value, index);
+    } else { // NaN
+      return this.baseFindIndex(array, this.baseIsNaN, index);
+    }
+  },
+  lastIndexOf(array, value, fromIndex) {
+    const baseIsNaN = value => {
+      return value !== value;
+    };
+    let length = array == null ? 0 : array.length;
+    if (!length) return -1;
+    let index = length;
+    if (fromIndex !== undefined) {
+      index = this.toInteger(fromIndex);
+      index = index > 0 ? Math.min(index, length - 1) : Math.max(0, length + index);
+    }
+    return value === value ? this.strictLastIndexOf(array, value, index) : this.baseFindIndex(array, baseIsNaN, index, true)
+  },
+  // 去掉数组最后一个元素
+  initial(array) {
+    const length = array == null ? 0 : array.length;
+    return length ? this.slice(array, 0, array.length - 1) : [];
+  },
+  map(array, iteratee) {
+    let length = array == null ? 0 : array.length, index = -1, result = new Array(length);
+    while (++index < length) {
+      result[index] = iteratee(array[index], index, array);
+    }
+    return result;
+  },
+  // TODO: 数组交集
+  // intersection(...arrays) {
+  //   // 如果它不是类似对象的数组 则将 `value` 强制转换为空数组
+  //   const castArrayLikeObject = value => {
+  //     return this.isArrayLikeObject(value) ? value : [];
+  //   }
+  //   const m = this.map(arrays, castArrayLikeObject);
+  // },
 }
-console.log(lodash.fromPairs([['a',1],['b',2]]));
+
+console.log(lodash.lastIndexOf([1, 2, 1, 2], 2));
